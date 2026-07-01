@@ -21,7 +21,6 @@
             --color-coral: #f37321;
             --border-color: #e5e5e0;
             --input-bg: #f4f4f0;
-            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         [data-theme="dark"] {
@@ -36,72 +35,75 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; }
-        body { background-color: var(--bg-primary); color: var(--text-primary); padding: 16px 16px calc(50px + var(--safe-bottom)); max-width: 600px; margin: 0 auto; }
+        
+        /* [수정] body의 하단 여백을 대폭 줄여 유령 스크롤 현상 방지 */
+        body { 
+            background-color: var(--bg-primary); 
+            color: var(--text-primary); 
+            padding: 12px 12px 20px; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            min-height: 100vh;
+        }
 
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        h1 { font-size: 1.4rem; color: var(--color-olive); font-weight: 800; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        h1 { font-size: 1.3rem; color: var(--color-olive); font-weight: 800; }
         h1 span { color: var(--color-coral); }
 
-        /* 상단 4단계 스텝 인디케이터 바 */
-        .step-indicator { display: flex; gap: 6px; margin-bottom: 20px; width: 100%; }
-        .step-bar { flex: 1; height: 6px; background: var(--border-color); border-radius: 4px; transition: background 0.3s; }
+        /* [수정] 상단 바 여백 압축 */
+        .step-indicator { display: flex; gap: 4px; margin-bottom: 12px; width: 100%; }
+        .step-bar { flex: 1; height: 5px; background: var(--border-color); border-radius: 4px; }
         .step-bar.active { background: var(--color-olive); }
 
-        .card { background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--border-color); }
-        h2 { font-size: 1.1rem; margin-bottom: 16px; border-left: 4px solid var(--color-olive); padding-left: 8px; }
+        /* [수정] 카드 내부 패딩 및 하단 마진을 줄여 한눈에 들어오도록 최적화 */
+        .card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid var(--border-color); }
+        h2 { font-size: 1rem; margin-bottom: 10px; border-left: 4px solid var(--color-olive); padding-left: 6px; }
 
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; }
+        .form-group { margin-bottom: 8px; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
         
+        /* [수정] 입력창 높이를 살짝 컴팩트하게 조정 */
         input, select, textarea { 
             width: 100%; 
             max-width: 100%;
-            padding: 12px; 
-            border-radius: 10px; 
+            padding: 10px; 
+            border-radius: 8px; 
             border: 1px solid var(--border-color); 
             background: var(--input-bg); 
             color: var(--text-primary); 
-            font-size: 1rem; 
+            font-size: 0.95rem; 
             outline: none;
             resize: none;
         }
         
-        input[type="datetime-local"] {
-            display: block;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-        
-        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
         .btn-primary { background: var(--color-olive); color: white; }
         .btn-accent { background: var(--color-coral); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
-        .btn-small { width: auto; padding: 8px 16px; font-size: 0.9rem; }
+        .btn-small { width: auto; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; }
 
-        .list-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .tag-item { background: var(--input-bg); padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; border: 1px solid var(--border-color); }
+        .list-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .tag-item { background: var(--input-bg); padding: 4px 10px; border-radius: 16px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
         .tag-item i { color: var(--color-coral); cursor: pointer; }
 
-        .select-item-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 12px; padding: 16px; background: var(--input-bg); border-radius: 12px; margin-bottom: 10px; cursor: pointer; width: 100%; }
-        .select-item-label input[type="checkbox"] { width: 22px !important; height: 22px !important; flex-shrink: 0; accent-color: var(--color-olive); }
-        .select-item-label span { font-size: 1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .select-item-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 12px; padding: 14px; background: var(--input-bg); border-radius: 10px; margin-bottom: 8px; cursor: pointer; width: 100%; }
+        .select-item-label input[type="checkbox"] { width: 20px !important; height: 20px !important; flex-shrink: 0; accent-color: var(--color-olive); }
+        .select-item-label span { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .agenda-write-card { border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; background: var(--bg-primary); }
-        .agenda-write-card h3 { font-size: 1rem; color: var(--color-olive); margin-bottom: 12px; }
+        .agenda-write-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--bg-primary); }
+        .agenda-write-card h3 { font-size: 0.95rem; color: var(--color-olive); margin-bottom: 8px; }
         
-        .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 10px; }
-        .line-input-group textarea { flex: 1; min-height: 54px; height: auto; padding: 8px 10px; line-height: 1.4; font-size: 0.95rem; }
-        .btn-del-line { background: none; border: none; color: var(--text-secondary); padding: 12px 6px; cursor: pointer; }
+        .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
+        .line-input-group textarea { flex: 1; min-height: 48px; height: auto; padding: 6px 8px; line-height: 1.4; font-size: 0.9rem; }
+        .btn-del-line { background: none; border: none; color: var(--text-secondary); padding: 10px 4px; cursor: pointer; }
 
-        /* 이미지 캡처용 영역 감싸기 스타일 구조 유지 */
-        .capture-wrapper { background: var(--bg-card); padding: 4px; border-radius: 12px; }
-        .result-view { white-space: pre-wrap; background: var(--input-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); line-height: 1.7; font-size: 0.95rem; color: #222222; }
+        .capture-wrapper { background: var(--bg-card); padding: 4px; border-radius: 10px; }
+        .result-view { white-space: pre-wrap; background: var(--input-bg); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); line-height: 1.6; font-size: 0.9rem; color: #222222; }
         
         .hidden { display: none !important; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .mt-10 { margin-top: 10px; }
-        .mt-20 { margin-top: 20px; }
+        .mt-12 { margin-top: 12px; }
     </style>
 </head>
 <body>
@@ -133,7 +135,7 @@
 
         <div class="card">
             <h2>참석자 등록</h2>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:6px;">
                 <input type="text" id="member-input" placeholder="이름 입력 후 엔터" onkeydown="if(event.keyCode==13) addMember()">
                 <button class="btn btn-primary btn-small" onclick="addMember()">등록</button>
             </div>
@@ -142,7 +144,7 @@
 
         <div class="card">
             <h2>회의 안건 관리</h2>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:6px;">
                 <input type="text" id="agenda-input" placeholder="안건 입력 후 엔터" onkeydown="if(event.keyCode==13) addAgenda()">
                 <button class="btn btn-primary btn-small" onclick="addAgenda()">등록</button>
             </div>
@@ -151,8 +153,8 @@
 
         <button class="btn btn-primary" onclick="switchStep(2)">회의 안건 선택 ➔</button>
         
-        <div class="mt-20" style="padding: 0 4px;">
-            <button class="btn btn-outline" style="color: #ff4d4d; border-color: #ffcccc; font-size:0.9rem; padding:10px;" onclick="clearAllCache()">
+        <div class="mt-12" style="text-align: center;">
+            <button class="btn btn-outline" style="color: #ff4d4d; border-color: #ffcccc; font-size:0.8rem; padding:8px;" onclick="clearAllCache()">
                 <i class="fa-solid fa-trash-can"></i> 전체 캐시 이력 초기화
             </button>
         </div>
@@ -187,7 +189,7 @@
                 <div class="result-view" id="result-text"></div>
             </div>
             
-            <button class="btn btn-accent mt-20" style="margin-bottom:12px;" onclick="shareToSlack()">
+            <button class="btn btn-accent mt-12" style="margin-bottom:8px;" onclick="shareToSlack()">
                 <i class="fa-brands fa-slack"></i> Slack으로 회의록 전송
             </button>
             
@@ -217,14 +219,12 @@
             if(saved) state = JSON.parse(saved);
             renderSetup();
             
-            // [변경] 다가올 가장 가까운 정시(Hour) 계산 매핑 로직
             if(!state.date) {
                 const now = new Date();
-                now.setHours(now.getHours() + 1); // 1시간 뒤로 올림
-                now.setMinutes(0);                // 분은 00분 정시로 세팅
+                now.setHours(now.getHours() + 1);
+                now.setMinutes(0);
                 now.setSeconds(0);
                 
-                // 시간대 오프셋 맞춤 보정
                 const offset = now.getTimezoneOffset() * 60000;
                 const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
                 document.getElementById('meet-date').value = localISOTime;
@@ -275,13 +275,11 @@
             document.getElementById('meet-title').value = state.title || "";
         }
 
-        // [변경] 스텝 이동 시 상단 인디케이터 바 동기화 반영
         function switchStep(n) {
-            document.querySelectorAll('body > div.card, body > div[id^="step-"]').forEach(div => div.classList.add('hidden'));
+            document.querySelectorAll('body > div[id^="step-"]').forEach(div => div.classList.add('hidden'));
             const ids = ['step-setup', 'step-select', 'step-write', 'step-result'];
             document.getElementById(ids[n-1]).classList.remove('hidden');
             
-            // 상단 인디케이터 바 점등 제어
             for(let i=1; i<=4; i++) {
                 const bar = document.getElementById(`bar-${i}`);
                 if(i <= n) bar.classList.add('active');
@@ -380,10 +378,8 @@
 
         function copyText() { navigator.clipboard.writeText(getRawReport()); alert("클립보드에 복사되었습니다."); }
         
-        // [변경] 기존 TXT 파일 생성 로직을 HTML 뷰 박스 스크린샷 이미지 저장 로직으로 교체
         function downloadAsImage() {
             const target = document.getElementById('capture-area');
-            // 모바일 디바이스 픽셀 밀도를 감안하여 선명하게 고화질 렌더링 세팅
             html2canvas(target, {
                 scale: 2, 
                 backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e1e1b' : '#ffffff',
