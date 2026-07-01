@@ -89,8 +89,6 @@
         .btn-small { width: auto; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; flex-shrink: 0; }
 
         .list-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 20px; }
-        
-        /* [원상복구] 드래그 관련 스타일 제거 및 기본 태그 스타일로 변경 */
         .tag-item { background: var(--input-bg); padding: 4px 10px; border-radius: 16px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); user-select: none; }
         .tag-item i { color: var(--color-coral); cursor: pointer; }
 
@@ -101,7 +99,6 @@
         .agenda-write-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--bg-primary); }
         .agenda-write-card h3 { font-size: 0.95rem; color: var(--color-olive); margin-bottom: 8px; }
         
-        /* [원상복구] 행 드래그 핸들 제거 및 레이아웃 정리 */
         .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; background: var(--bg-card); padding: 4px; border-radius: 8px; }
         .line-input-group textarea { flex: 1; min-height: 48px; height: auto; padding: 6px 8px; line-height: 1.4; font-size: 0.9rem; }
         .btn-del-line { background: none; border: none; color: var(--text-secondary); padding: 10px 4px; cursor: pointer; }
@@ -129,6 +126,7 @@
         <div class="step-bar" id="bar-4"></div>
     </div>
 
+    <!-- [STEP 1] 설정 페이지 -->
     <div id="step-setup">
         <div class="card">
             <h2>기본 정보</h2>
@@ -169,6 +167,7 @@
         </div>
     </div>
 
+    <!-- [STEP 2] 안건 선택 페이지 -->
     <div id="step-select" class="hidden">
         <div class="card">
             <h2>안건 선택</h2>
@@ -180,6 +179,7 @@
         </div>
     </div>
 
+    <!-- [STEP 3] 실시간 작성 페이지 -->
     <div id="step-write" class="hidden">
         <div class="card">
             <h2>회의 진행 기록</h2>
@@ -191,6 +191,7 @@
         </div>
     </div>
 
+    <!-- [STEP 4] 결과 페이지 -->
     <div id="step-result" class="hidden">
         <div class="card">
             <h2>최종 회의록</h2>
@@ -198,18 +199,20 @@
                 <div class="result-view" id="result-text"></div>
             </div>
             
-            <div class="grid-2 mt-12">
-                <button class="btn btn-accent" onclick="saveToGallery()"><i class="fa-solid fa-images"></i> 사진첩에 저장</button>
-                <button class="btn btn-primary" onclick="downloadAsPNG()"><i class="fa-solid fa-file-image"></i> PNG로 저장</button>
+            <!-- [구조 수정] 슬랙 공유 가로 단독 배치 -->
+            <div class="mt-12">
+                <button class="btn btn-accent" onclick="shareToSlack()" style="padding: 14px; font-size: 1.05rem;"><i class="fa-brands fa-slack"></i> Slack 공유</button>
             </div>
 
+            <!-- [구조 수정] 텍스트 복사 및 사진(PNG) 저장 5:5 그리드 배치 -->
             <div class="grid-2 mt-10">
-                <button class="btn btn-outline" onclick="copyText()">텍스트 복사</button>
-                <button class="btn btn-outline" onclick="shareToSlack()"><i class="fa-brands fa-slack"></i> Slack 공유</button>
+                <button class="btn btn-outline" onclick="copyText()"><i class="fa-regular fa-copy"></i> 텍스트 복사</button>
+                <button class="btn btn-primary" onclick="downloadAsPNG()"><i class="fa-solid fa-file-image"></i> 사진(PNG)로 저장</button>
             </div>
             
-            <div class="grid-2 mt-12" style="border-top: 1px dashed var(--border-color); padding-top: 10px;">
-                <button class="btn btn-outline" onclick="switchStep(3)">◀ 이전</button>
+            <!-- 하단 이동 메뉴 인터페이스 -->
+            <div class="grid-2 mt-12" style="border-top: 1px dashed var(--border-color); padding-top: 12px;">
+                <button class="btn btn-outline" onclick="switchStep(3)"><i class="fa-solid fa-chevron-left"></i> 이전</button>
                 <button class="btn btn-outline" style="color:red; border-color: #ffcccc;" onclick="location.reload()">새 회의 시작</button>
             </div>
         </div>
@@ -257,7 +260,7 @@
         }
 
         function clearAllCache() {
-            if(confirm("기본 안건 세팅을 포함하여 등록된 참석자, 저장 기록 등 모든 데이터가 공장 초기화됩니다. 진행할까요?")) {
+            if(confirm("기본 안건 세팅을 포함하여 등록된 참석자, 저장 기록 등 모든 데이터가 초기화됩니다. 진행할까요?")) {
                 localStorage.removeItem('olive_pwa_data_v4');
                 location.reload();
             }
@@ -275,7 +278,6 @@
         }
         function delAgenda(idx) { state.agendas.splice(idx, 1); renderSetup(); save(); }
 
-        /* [원상복구] 스크립트 단의 드래그앤드롭 이벤트 바인딩 로직 전체 삭제 */
         function renderSetup() {
             const mList = document.getElementById('member-list');
             mList.innerHTML = state.members.map((m, i) => `
@@ -330,7 +332,6 @@
             switchStep(3);
         }
 
-        /* [원상복구] 내용 행 드래그 핸들 아이콘 및 드래그 바인딩 코드 전면 제거 */
         function renderWriteZone() {
             const zone = document.getElementById('write-zone');
             zone.innerHTML = state.selected.map(a => `
@@ -389,33 +390,6 @@
                 navigator.clipboard.writeText(reportText);
                 alert("시스템 공유 기능이 지원되지 않아 클립보드에 복사했습니다. Slack 창에 붙여넣기 해주세요.");
             }
-        }
-
-        function saveToGallery() {
-            const target = document.getElementById('capture-area');
-            html2canvas(target, {
-                scale: 2,
-                backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e1e1b' : '#ffffff',
-                useCORS: true
-            }).then(canvas => {
-                canvas.toBlob(async (blob) => {
-                    const file = new File([blob], `회의록_${state.title || '미팅'}.png`, { type: 'image/png' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: '회의록 이미지 저장',
-                                text: '하단의 [이미지 저장]을 누르면 사진첩(갤러리)으로 들어갑니다.'
-                            });
-                        } catch (err) {
-                            console.log('공유/저장 취소됨:', err);
-                        }
-                    } else {
-                        alert("현재 브라우저는 다이렉트 사진첩 저장을 지원하지 않아 일반 PNG 파일 저장 방식으로 전환합니다.");
-                        downloadAsPNG();
-                    }
-                }, 'image/png');
-            });
         }
 
         function downloadAsPNG() {
