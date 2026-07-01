@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>올리브 미팅록 (PWA)</title>
+    <title>OLIVE Meeting Room</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -36,7 +36,6 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; }
         
-        /* [수정] body의 하단 여백을 대폭 줄여 유령 스크롤 현상 방지 */
         body { 
             background-color: var(--bg-primary); 
             color: var(--text-primary); 
@@ -50,22 +49,20 @@
         h1 { font-size: 1.3rem; color: var(--color-olive); font-weight: 800; }
         h1 span { color: var(--color-coral); }
 
-        /* [수정] 상단 바 여백 압축 */
         .step-indicator { display: flex; gap: 4px; margin-bottom: 12px; width: 100%; }
         .step-bar { flex: 1; height: 5px; background: var(--border-color); border-radius: 4px; }
         .step-bar.active { background: var(--color-olive); }
 
-        /* [수정] 카드 내부 패딩 및 하단 마진을 줄여 한눈에 들어오도록 최적화 */
-        .card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid var(--border-color); }
+        /* [교정] 카드가 유연하게 줄어들도록 내부 요소 유연화 */
+        .card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
         h2 { font-size: 1rem; margin-bottom: 10px; border-left: 4px solid var(--color-olive); padding-left: 6px; }
 
-        .form-group { margin-bottom: 8px; }
+        .form-group { margin-bottom: 8px; width: 100%; display: flex; flex-direction: column; }
         .form-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
         
-        /* [수정] 입력창 높이를 살짝 컴팩트하게 조정 */
         input, select, textarea { 
-            width: 100%; 
-            max-width: 100%;
+            width: 100% !important; 
+            max-width: 100% !important;
             padding: 10px; 
             border-radius: 8px; 
             border: 1px solid var(--border-color); 
@@ -76,11 +73,22 @@
             resize: none;
         }
         
+        /* [수정] 아이폰 및 일부 안드로이드에서 datetime 인풋이 좌우를 뚫고 나가는 버그 완전 강제 교정 */
+        input[type="datetime-local"] {
+            display: block;
+            min-width: 0 !important; /* 기본 최소너비 제한 해제 */
+            flex: 1;
+            box-sizing: border-box !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
         .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; }
         .btn-primary { background: var(--color-olive); color: white; }
         .btn-accent { background: var(--color-coral); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
-        .btn-small { width: auto; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; }
+        .btn-small { width: auto; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; flex-shrink: 0; }
 
         .list-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
         .tag-item { background: var(--input-bg); padding: 4px 10px; border-radius: 16px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
@@ -109,7 +117,7 @@
 <body>
 
     <header>
-        <h1>올리브 <span>미팅록</span></h1>
+        <h1>OLIVE<span>Meeting Room</span></h1>
         <button class="btn-outline btn-small" onclick="toggleTheme()">테마</button>
     </header>
 
@@ -135,7 +143,7 @@
 
         <div class="card">
             <h2>참석자 등록</h2>
-            <div style="display:flex; gap:6px;">
+            <div style="display:flex; gap:6px; width:100%;">
                 <input type="text" id="member-input" placeholder="이름 입력 후 엔터" onkeydown="if(event.keyCode==13) addMember()">
                 <button class="btn btn-primary btn-small" onclick="addMember()">등록</button>
             </div>
@@ -144,7 +152,7 @@
 
         <div class="card">
             <h2>회의 안건 관리</h2>
-            <div style="display:flex; gap:6px;">
+            <div style="display:flex; gap:6px; width:100%;">
                 <input type="text" id="agenda-input" placeholder="안건 입력 후 엔터" onkeydown="if(event.keyCode==13) addAgenda()">
                 <button class="btn btn-primary btn-small" onclick="addAgenda()">등록</button>
             </div>
@@ -209,7 +217,7 @@
         let state = {
             title: "", date: "", 
             members: [], 
-            agendas: ["발주 변경", "신상품 교육", "재고 운영"],
+            agendas: ["서비스", "인력운용", "재고관리"],
             selected: [],
             contents: {}
         };
