@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>올리브 미팅록 (PWA)</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="올리브 미팅">
+    
+    <style>
+        :root {
+            /* 올리브영 스타일 컬러 바인딩 */
+            --bg-primary: #f9f9f7;
+            --bg-card: #ffffff;
+            --text-primary: #222222;
+            --text-secondary: #666666;
+            --color-olive: #8a9a5b;       /* 올리브 그린 메인 포인트 */
+            --color-olive-dark: #6e7f46;
+            --color-coral: #f37321;       /* 오렌지/코랄 포인트 */
+            --border-color: #e5e5e0;
+            --input-bg: #f4f4f0;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #121210;
+            --bg-card: #1e1e1b;
+            --text-primary: #f5f5f0;
+            --text-secondary: #b0b0a8;
+            --color-olive: #a2b774;
+            --color-olive-dark: #8a9a5b;
+            --color-coral: #ff8838;
+            --border-color: #333330;
+            --input-bg: #2a2a27;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 20px 16px calc(40px + var(--safe-bottom)) 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* 헤더 & 테마 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 10px 0;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--color-olive);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        h1 span {
+            color: var(--color-coral);
+        }
+
+        .top-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-mini {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        /* 공통 카드 스타일 */
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        h2 {
+            font-size: 1.15rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+            border-left: 4px solid var(--color-olive);
+            padding-left: 8px;
+        }
+
+        /* 폼 요소 */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="datetime-local"], select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--color-olive);
+        }
+
+        /* 버튼 기본 */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .btn-primary {
+            background-color: var(--color-olive);
+            color: white;
+        }
+
+        .btn-accent {
+            background-color: var(--color-coral);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* 안건 관리 목록 */
+        .agenda-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .agenda-list {
+            list-style: none;
+        }
+
+        .agenda-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 4px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .agenda-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn-text.delete { color: #ff4d4d; }
+
+        /* 체크박스 선택 영역 */
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--input-bg);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .check-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--color-olive);
+        }
+
+        /* 회의록 작성 카드 양식 */
+        .meeting-write-block {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: var(--bg-primary);
+        }
+
+        .meeting-write-block h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: var(--color-olive);
+        }
+
+        /* 결과 화면 및 복사 텍스트 에어리어 */
+        .result-view {
+            white-space: pre-wrap;
+            background: var(--input-bg);
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* 유틸리티 */
+        .hidden { display: none !important; }
+        .mt-10 { margin-top: 10px; }
+        .mb-20 { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>올리브 <span>미팅록</span></h1>
+        <div class="top-buttons">
+            <button class="btn-mini" id="installBtn" style="display:none;">앱 설치</button>
+            <button class="btn-mini" onclick="toggleTheme()">테마 변경</button>
+        </div>
+    </header>
+
+    <div id="step-setup">
+        <div class="card">
+            <h2>기본 회의 정보</h2>
+            <div class="form-group">
+                <label>회의 제목</label>
+                <input type="text" id="meet-title" placeholder="예: 주간 매장운영 회의">
+            </div>
+            <div class="form-group">
+                <label>회의 일시</label>
+                <input type="datetime-local" id="meet-date">
+            </div>
+            <div class="form-group">
+                <label>참석자</label>
+                <input type="text" id="meet-members" placeholder="예: 홍길동, 김철수, 이영희">
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>회의 안건 관리</h2>
+            <div class="agenda-input-row">
+                <input type="text" id="new-agenda" placeholder="새 안건 입력 (예: 재고 운영)">
+                <button class="btn btn-primary" onclick="addAgenda()" style="width:70px; padding:0;">등록</button>
+            </div>
+            <ul class="agenda-list" id="agenda-list-ui"></ul>
+        </div>
+
+        <button class="btn btn-primary mb-20" onclick="startMeetingSetup()">회의 시작 준비하기 ➔</button>
+    </div>
+
+    <div id="step-select" class="hidden">
+        <div class="card">
+            <h2>이번 회의에서 다룰 안건 선택</h2>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:12px;">선택한 안건만 회의록 작성 템플릿에 포함됩니다.</p>
+            <div id="agenda-select-zone"></div>
+            <div class="grid-2 mt-10">
+                <button class="btn btn-outline" onclick="goBackTo(1)">◀ 이전</button>
+                <button class="btn btn-accent" onclick="startMeetingWrite()">회의 시작 ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="step-write" class="hidden">
+        <div class="card">
+            <h2>회의록 실시간 작성</h2>
+            <div id="meeting-write-zone"></div>
+            
+            <div class="form-group" style="margin-top:20px;">
+                <label>종합 회의 메모</label>
+                <textarea id="meet-general-memo" rows="4" placeholder="기타 논의사항이나 메모를 입력하세요." oninput="saveWriteData()"></textarea>
+            </div>
+
+            <div class="grid-2 mt-10">
+                <button class="btn btn-outline" onclick="goBackTo(2)">◀ 안건 재선택</button>
+                <button class="btn btn-primary" onclick="finishMeeting()">회의 종료 & 정리 ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="step-result" class="hidden">
+        <div class="card">
+            <h2>📋 생성된 회의록 확인</h2>
+            <div class="result-view" id="result-view-area"></div>
+            
+            <div class="form-group">
+                <label>Slack 전송 채널 선택</label>
+                <select id="slack-channel-select">
+                    <option value="매장운영">📢 매장운영</option>
+                    <option value="공지">📌 공지</option>
+                    <option value="CS">🎧 CS</option>
+                    <option value="상품">📦 상품</option>
+                    <option value="점장회의">💼 점장회의</option>
+                </select>
+            </div>
+
+            <button class="btn btn-accent mb-20" onclick="sendSlack()">Slack 채널로 회의록 전송</button>
+
+            <div class="grid-2">
+                <button class="btn btn-outline" onclick="copyToClipboard()">텍스트 복사</button>
+                <button class="btn btn-outline" onclick="copyMarkdown()">Markdown 복사</button>
+            </div>
+            <div class="grid-2 mt-10">
+                <button class="btn btn-outline" onclick="downloadTxt()">TXT 다운로드</button>
+                <button class="btn btn-outline" onclick="window.print()">PDF/인쇄</button>
+            </div>
+
+            <hr style="border:none; border-top:1px solid var(--border-color); margin:20px 0;">
+            <button class="btn btn-outline" onclick="resetAllData()" style="color:#ff4d4d;">모든 데이터 초기화 후 처음으로</button>
+            <button class="btn btn-outline mt-10" onclick="goBackTo(3)">◀ 수정하러 가기</button>
+        </div>
+    </div>
+
+
+    <script>
+        // 상태값 관리 데이터 구조
+        let state = {
+            agendas: ["행사 준비", "발주 변경", "신상품 교육", "재고 운영"], // 기본 초기값
+            title: "", date: "", members: "",
+            selectedAgendas: [],
+            contents: {}, // {안건명: {decision:'', manager:'', deadline:'', memo:''}}
+            generalMemo: ""
+        };
+
+        // 로드 시 초기화
+        window.onload = function() {
+            initTheme();
+            loadFromLocalStorage();
+            renderAgendaList();
+            setupDateTime();
+        };
+
+        function setupDateTime() {
+            if(!document.getElementById('meet-date').value) {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('meet-date').value = now.toISOString().slice(0, 16);
+            }
+        }
+
+        // 로컬스토리지 저장 및 불러오기
+        function saveToLocalStorage() {
+            localStorage.setItem('olive_meeting_state', JSON.stringify(state));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('olive_meeting_state');
+            if(saved) {
+                try {
+                    state = JSON.parse(saved);
+                    document.getElementById('meet-title').value = state.title || "";
+                    document.getElementById('meet-date').value = state.date || "";
+                    document.getElementById('meet-members').value = state.members || "";
+                    document.getElementById('meet-general-memo').value = state.generalMemo || "";
+                } catch(e) { console.error("데이터 로드 실패", e); }
+            }
+        }
+
+        // 안건 추가/수정/삭제 조작
+        function renderAgendaList() {
+            const listUi = document.getElementById('agenda-list-ui');
+            listUi.innerHTML = "";
+            state.agendas.forEach((item, index) => {
+                listUi.innerHTML += `
+                    <li class="agenda-item">
+                        <span>${item}</span>
+                        <div class="agenda-item-actions">
+                            <button class="btn-text" onclick="editAgenda(${index})">수정</button>
+                            <button class="btn-text delete" onclick="deleteAgenda(${index})">삭제</button>
+                        </div>
+                    </li>
+                `;
+            });
+        }
+
+        function addAgenda() {
+            const input = document.getElementById('new-agenda');
+            const val = input.value.trim();
+            if(!val) return;
+            state.agendas.push(val);
+            input.value = "";
+            renderAgendaList();
+            saveToLocalStorage();
+        }
+
+        function editAgenda(index) {
+            const current = state.agendas[index];
+            const next = prompt("안건 내용을 수정하세요:", current);
+            if(next && next.trim()) {
+                state.agendas[index] = next.trim();
+                renderAgendaList();
+                saveToLocalStorage();
+            }
+        }
+
+        function deleteAgenda(index) {
+            if(confirm("이 안건을 목록에서 삭제하시겠습니까?")) {
+                state.agendas.splice(index, 1);
+                renderAgendaList();
+                saveToLocalStorage();
+            }
+        }
+
+        // 네비게이션 제어
+        function switchStep(stepId) {
+            ['step-setup', 'step-select', 'step-write', 'step-result'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(stepId).classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function goBackTo(stepNum) {
+            if(stepNum === 1) switchStep('step-setup');
+            if(stepNum === 2) switchStep('step-select');
+            if(stepNum === 3) switchStep('step-write');
+        }
+
+        // 단계 1 -> 단계 2 전환 및 렌더링
+        function startMeetingSetup() {
+            state.title = document.getElementById('meet-title').value;
+            state.date = document.getElementById('meet-date').value;
+            state.members = document.getElementById('meet-members').value;
+            saveToLocalStorage();
+
+            const zone = document.getElementById('agenda-select-zone');
+            zone.innerHTML = "";
+            
+            if(state.agendas.length === 0) {
+                zone.innerHTML = "<p style='padding:20px 0; text-align:center; color:var(--text-secondary);'>등록된 안건이 없습니다. 이전 화면에서 안건을 추가해주세요.</p>";
+            } else {
+                state.agendas.forEach((agenda, idx) => {
+                    const isChecked = state.selectedAgendas.includes(agenda) ? "checked" : "";
+                    zone.innerHTML += `
+                        <label class="check-item">
+                            <input type="checkbox" value="${agenda}" ${isChecked} onchange="syncSelectedAgendas()">
+                            <span>${agenda}</span>
+                        </label>
+                    `;
+                });
+            }
+            switchStep('step-select');
+        }
+
+        function syncSelectedAgendas() {
+            const checkboxes = document.querySelectorAll('#agenda-select-zone input[type="checkbox"]');
+            state.selectedAgendas = [];
+            checkboxes.forEach(cb => {
+                if(cb.checked) state.selectedAgendas.push(cb.value);
+            });
+            saveToLocalStorage();
+        }
+
+        // 단계 2 -> 단계 3 전환 및 작성 폼 빌드
+        function startMeetingWrite() {
+            syncSelectedAgendas();
+            if(state.selectedAgendas.length === 0) {
+                alert("회의를 진행할 안건을 최소 하나 이상 선택해주세요.");
+                return;
+            }
+
+            const zone = document.getElementById('meeting-write-zone');
+            zone.innerHTML = "";
+
+            state.selectedAgendas.forEach((agenda, idx) => {
+                const savedData = state.contents[agenda] || {decision:'', manager:'', deadline:'', memo:''};
+                zone.innerHTML += `
+                    <div class="meeting-write-block">
+                        <h3> 안건: ${agenda}</h3>
+                        <div class="form-group">
+                            <label>결정사항</label>
+                            <input type="text" data-agenda="${agenda}" data-field="decision" value="${savedData.decision}" placeholder="결정된 핵심 내용 입력" oninput="saveWriteData()">
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>담당자</label>
+                                <input type="text" data-agenda="${agenda}" data-field="manager" value="${savedData.manager}" placeholder="이름" oninput="saveWriteData()">
+                            </div>
+                            <div class="form-group">
+                                <label>기한</label>
+                                <input type="text" data-agenda="${agenda}" data-field="deadline" value="${savedData.deadline}" placeholder="지정 기한" oninput="saveWriteData()">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>안건 메모</label>
+                            <input type="text" data-agenda="${agenda}" data-field="memo" value="${savedData.memo}" placeholder="추가 논의 상세 맥락" oninput="saveWriteData()">
+                        </div>
+                    </div>
+                `;
+            });
+            switchStep('step-write');
+        }
+
+        // 입력 폼 변경될 때 실시간 상태 동기화 및 자동저장
+        function saveWriteData() {
+            const inputs = document.querySelectorAll('#meeting-write-zone input');
+            inputs.forEach(input => {
+                const agenda = input.getAttribute('data-agenda');
+                const field = input.getAttribute('data-field');
+                if(!state.contents[agenda]) state.contents[agenda] = {decision:'', manager:'', deadline:'', memo:''};
+                state.contents[agenda][field] = input.value;
+            });
+            state.generalMemo = document.getElementById('meet-general-memo').value;
+            saveToLocalStorage();
+        }
+
+        // 단계 3 -> 단계 4 결과 취합물 포맷 생성
+        function generateReportText() {
+            let txt = `📝 [회의록] ${state.title || '정기 회의'}\n`;
+            txt += `■ 일시: ${state.date ? state.date.replace('T', ' ') : '-'}\n`;
+            txt += `■ 참석자: ${state.members || '-'}\n`;
+            txt += `─────────────────────────\n\n`;
+
+            state.selectedAgendas.forEach((agenda, idx) => {
+                const data = state.contents[agenda] || {decision:'', manager:'', deadline:'', memo:''};
+                txt += `📌 안건 ${idx+1}. ${agenda}\n`;
+                txt += ` - 결정사항: ${data.decision || '-'}\n`;
+                txt += ` - 담당자: ${data.manager || '-'}\n`;
+                txt += ` - 기한: ${data.deadline || '-'}\n`;
+                if(data.memo) txt += ` - 비고: ${data.memo}\n`;
+                txt += `\n`;
+            });
+
+            if(state.generalMemo.trim()) {
+                txt += `─────────────────────────\n`;
+                txt += `💬 종합 회의 메모\n${state.generalMemo}\n`;
+            }
+            return txt;
+        }
+
+        function finishMeeting() {
+            saveWriteData();
+            document.getElementById('result-view-area').innerText = generateReportText();
+            switchStep('step-result');
+        }
+
+        // 클립보드 복사 및 유틸 기능들
+        function copyToClipboard() {
+            const text = generateReportText();
+            navigator.clipboard.writeText(text).then(() => alert('회의록이 클립보드에 복사되었습니다!'));
+        }
+
+        function copyMarkdown() {
+            let md = `# 📝 [회의록] ${state.title || '정기 회의'}\n`;
+            md += `* **일시:** ${state.date ? state.date.replace('T', ' ') : '-'}\n`;
+            md += `* **참석자:** ${state.members || '-'}\n\n---\n\n`;
+
+            state.selectedAgendas.forEach((agenda, idx) => {
+                const data = state.contents[agenda] || {decision:'', manager:'', deadline:'', memo:''};
+                md += `### 📌 안건 ${idx+1}. ${agenda}\n`;
+                md += `* **결정사항:** ${data.decision || '-'}\n`;
+                md += `* **담당자:** ${data.manager || '-'}\n`;
+                md += `* **기한:** ${data.deadline || '-'}\n`;
+                if(data.memo) md += `* **비고:** ${data.memo}\n`;
+                md += `\n`;
+            });
+
+            if(state.generalMemo.trim()) {
+                md += `---\n### 💬 종합 회의 메모\n${state.generalMemo}\n`;
+            }
+            navigator.clipboard.writeText(md).then(() => alert('Markdown 텍스트가 클립보드에 복사되었습니다!'));
+        }
+
+        function downloadTxt() {
+            const element = document.createElement("a");
+            const file = new Blob([generateReportText()], {type: 'text/plain;charset=utf-8'});
+            element.href = URL.createObjectURL(file);
+            element.download = `회의록_${state.title || '정기회의'}.txt`;
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        // Slack Webhook 연동 가상 전송기능
+        function sendSlack() {
+            const selectedChannel = document.getElementById('slack-channel-select').value;
+            const payloadText = `[${selectedChannel} 채널 전송본]\n\n${generateReportText()}`;
+            
+            // 실제 사용 환경을 고려한 명세 구성 안내 포함
+            alert(`[Slack 전송 가상 완료]\n선택한 '${selectedChannel}' 채널로 전송 설정을 매핑합니다.\n\n* 실제 인하우스 웹훅 연동 시 배포된 서버 주소 보안 우회를 위해 fetch() 타겟 URL 및 시크릿 토큰 키값을 인젝션하여 실사용할 수 있습니다.`);
+            console.log("Slack Payload:", payloadText);
+        }
+
+        // 초기화 처리
+        function resetAllData() {
+            if(confirm("기본 안건 목록을 제외한 모든 입력 중인 데이터가 삭제됩니다. 초기화할까요?")) {
+                localStorage.removeItem('olive_meeting_state');
+                state.title = ""; state.date = ""; state.members = "";
+                state.selectedAgendas = []; state.contents = {}; state.generalMemo = "";
+                document.getElementById('meet-title').value = "";
+                document.getElementById('meet-members').value = "";
+                document.getElementById('meet-general-memo').value = "";
+                setupDateTime();
+                saveToLocalStorage();
+                switchStep('step-setup');
+            }
+        }
+
+        // 테마 토글 핸들러
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('olive_meeting_theme', target);
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('olive_meeting_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('ServiceWorker 등록 완료: ', reg.scope);
+                }).catch(err => {
+                    console.log('ServiceWorker 등록 실패: ', err);
+                });
+            });
+        }
+
+        // PWA 홈화면 추가(설치) 유도 이벤트 바인딩
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installBtn');
+            if(installBtn) installBtn.style.display = 'block';
+        });
+
+        const installBtn = document.getElementById('installBtn');
+        if(installBtn) {
+            installBtn.addEventListener('click', () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            installBtn.style.display = 'none';
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
