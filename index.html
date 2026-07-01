@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OLIVE Meeting Room</title>
+    <title>올리브 미팅록 (PWA)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -53,7 +53,6 @@
         .step-bar { flex: 1; height: 5px; background: var(--border-color); border-radius: 4px; }
         .step-bar.active { background: var(--color-olive); }
 
-        /* [교정] 카드가 유연하게 줄어들도록 내부 요소 유연화 */
         .card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
         h2 { font-size: 1rem; margin-bottom: 10px; border-left: 4px solid var(--color-olive); padding-left: 6px; }
 
@@ -73,10 +72,9 @@
             resize: none;
         }
         
-        /* [수정] 아이폰 및 일부 안드로이드에서 datetime 인풋이 좌우를 뚫고 나가는 버그 완전 강제 교정 */
         input[type="datetime-local"] {
             display: block;
-            min-width: 0 !important; /* 기본 최소너비 제한 해제 */
+            min-width: 0 !important;
             flex: 1;
             box-sizing: border-box !important;
             -webkit-appearance: none;
@@ -90,9 +88,12 @@
         .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
         .btn-small { width: auto; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; flex-shrink: 0; }
 
-        .list-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-        .tag-item { background: var(--input-bg); padding: 4px 10px; border-radius: 16px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
-        .tag-item i { color: var(--color-coral); cursor: pointer; }
+        .list-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 20px; }
+        
+        /* [수정] 드래그 가능 아이템들에 스타일 가이드 적용 */
+        .tag-item { background: var(--input-bg); padding: 4px 10px; border-radius: 16px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); cursor: grab; user-select: none; transition: opacity 0.2s; }
+        .tag-item:active { cursor: grabbing; }
+        .tag-item.dragging { opacity: 0.4; background: var(--border-color); }
 
         .select-item-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 12px; padding: 14px; background: var(--input-bg); border-radius: 10px; margin-bottom: 8px; cursor: pointer; width: 100%; }
         .select-item-label input[type="checkbox"] { width: 20px !important; height: 20px !important; flex-shrink: 0; accent-color: var(--color-olive); }
@@ -101,7 +102,11 @@
         .agenda-write-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--bg-primary); }
         .agenda-write-card h3 { font-size: 0.95rem; color: var(--color-olive); margin-bottom: 8px; }
         
-        .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
+        /* [수정] 입력 행 드래그 가이드 핸들 및 효과 추가 */
+        .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; background: var(--bg-card); padding: 4px; border-radius: 8px; border: 1px dashed transparent; }
+        .line-input-group.dragging { opacity: 0.4; border-color: var(--color-olive); }
+        .drag-handle { color: var(--text-secondary); padding: 10px 4px; cursor: grab; font-size: 0.9rem; display: flex; align-items: center; }
+        .drag-handle:active { cursor: grabbing; }
         .line-input-group textarea { flex: 1; min-height: 48px; height: auto; padding: 6px 8px; line-height: 1.4; font-size: 0.9rem; }
         .btn-del-line { background: none; border: none; color: var(--text-secondary); padding: 10px 4px; cursor: pointer; }
 
@@ -117,7 +122,7 @@
 <body>
 
     <header>
-        <h1>OLIVE<span>Meeting Room</span></h1>
+        <h1>올리브 <span>미팅록</span></h1>
         <button class="btn-outline btn-small" onclick="toggleTheme()">테마</button>
     </header>
 
@@ -128,6 +133,7 @@
         <div class="step-bar" id="bar-4"></div>
     </div>
 
+    <!-- [STEP 1] 설정 페이지 -->
     <div id="step-setup">
         <div class="card">
             <h2>기본 정보</h2>
@@ -142,7 +148,7 @@
         </div>
 
         <div class="card">
-            <h2>참석자 등록</h2>
+            <h2>참석자 등록 (드래그 순서 변경 가능)</h2>
             <div style="display:flex; gap:6px; width:100%;">
                 <input type="text" id="member-input" placeholder="이름 입력 후 엔터" onkeydown="if(event.keyCode==13) addMember()">
                 <button class="btn btn-primary btn-small" onclick="addMember()">등록</button>
@@ -151,7 +157,7 @@
         </div>
 
         <div class="card">
-            <h2>회의 안건 관리</h2>
+            <h2>회의 안건 관리 (드래그 순서 변경 가능)</h2>
             <div style="display:flex; gap:6px; width:100%;">
                 <input type="text" id="agenda-input" placeholder="안건 입력 후 엔터" onkeydown="if(event.keyCode==13) addAgenda()">
                 <button class="btn btn-primary btn-small" onclick="addAgenda()">등록</button>
@@ -168,6 +174,7 @@
         </div>
     </div>
 
+    <!-- [STEP 2] 안건 선택 페이지 -->
     <div id="step-select" class="hidden">
         <div class="card">
             <h2>안건 선택</h2>
@@ -179,6 +186,7 @@
         </div>
     </div>
 
+    <!-- [STEP 3] 실시간 작성 페이지 -->
     <div id="step-write" class="hidden">
         <div class="card">
             <h2>회의 진행 기록</h2>
@@ -190,6 +198,7 @@
         </div>
     </div>
 
+    <!-- [STEP 4] 결과 페이지 -->
     <div id="step-result" class="hidden">
         <div class="card">
             <h2>최종 회의록</h2>
@@ -217,13 +226,13 @@
         let state = {
             title: "", date: "", 
             members: [], 
-            agendas: ["서비스", "인력운용", "재고관리"],
+            agendas: ["발주 변경", "신상품 교육", "재고 운영"],
             selected: [],
             contents: {}
         };
 
         window.onload = () => {
-            const saved = localStorage.getItem('olive_pwa_data_v3');
+            const saved = localStorage.getItem('olive_pwa_data_v4');
             if(saved) state = JSON.parse(saved);
             renderSetup();
             
@@ -251,12 +260,12 @@
         function save() { 
             state.title = document.getElementById('meet-title').value;
             state.date = document.getElementById('meet-date').value;
-            localStorage.setItem('olive_pwa_data_v3', JSON.stringify(state)); 
+            localStorage.setItem('olive_pwa_data_v4', JSON.stringify(state)); 
         }
 
         function clearAllCache() {
             if(confirm("기본 안건 세팅을 포함하여 등록된 참석자, 저장 기록 등 모든 데이터가 공장 초기화됩니다. 진행할까요?")) {
-                localStorage.removeItem('olive_pwa_data_v3');
+                localStorage.removeItem('olive_pwa_data_v4');
                 location.reload();
             }
         }
@@ -273,12 +282,25 @@
         }
         function delAgenda(idx) { state.agendas.splice(idx, 1); renderSetup(); save(); }
 
+        // [수정] 렌더링 시 Draggable 속성 부여 및 순서 정렬 이벤트 바인딩
         function renderSetup() {
             const mList = document.getElementById('member-list');
-            mList.innerHTML = state.members.map((m, i) => `<div class="tag-item">${m} <i class="fa-solid fa-xmark" onclick="delMember(${i})"></i></div>`).join('');
+            mList.innerHTML = state.members.map((m, i) => `
+                <div class="tag-item" draggable="true" data-index="${i}">
+                    <i class="fa-solid fa-bars" style="color:#bbb; font-size:0.75rem;"></i> ${m} 
+                    <i class="fa-solid fa-xmark" onclick="delMember(${i})"></i>
+                </div>
+            `).join('');
+            bindDragEvents(mList, 'members', renderSetup);
             
             const aList = document.getElementById('agenda-list');
-            aList.innerHTML = state.agendas.map((a, i) => `<div class="tag-item">${a} <i class="fa-solid fa-xmark" onclick="delAgenda(${i})"></i></div>`).join('');
+            aList.innerHTML = state.agendas.map((a, i) => `
+                <div class="tag-item" draggable="true" data-index="${i}">
+                    <i class="fa-solid fa-bars" style="color:#bbb; font-size:0.75rem;"></i> ${a} 
+                    <i class="fa-solid fa-xmark" onclick="delAgenda(${i})"></i>
+                </div>
+            `).join('');
+            bindDragEvents(aList, 'agendas', renderSetup);
             
             document.getElementById('meet-title').value = state.title || "";
         }
@@ -319,14 +341,16 @@
             switchStep(3);
         }
 
+        // [수정] 세 번째 페이지 행 단위 드래그&드롭 핸들 인터페이스 바인딩
         function renderWriteZone() {
             const zone = document.getElementById('write-zone');
             zone.innerHTML = state.selected.map(a => `
                 <div class="agenda-write-card">
                     <h3>📌 ${a}</h3>
-                    <div id="lines-${a}">
+                    <div id="lines-${a}" class="lines-container" data-agenda="${a}">
                         ${state.contents[a].map((text, i) => `
-                            <div class="line-input-group">
+                            <div class="line-input-group" draggable="true" data-index="${i}">
+                                <div class="drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
                                 <textarea placeholder="내용을 입력하세요" oninput="updateLine('${a}', ${i}, this.value)">${text}</textarea>
                                 <button class="btn-del-line" onclick="delLine('${a}', ${i})"><i class="fa-solid fa-minus"></i></button>
                             </div>
@@ -335,11 +359,93 @@
                     <button class="btn btn-outline btn-small" onclick="addLine('${a}')" style="width:100%; margin-top:4px;">+ 내용 행 추가</button>
                 </div>
             `).join('');
+
+            // 각 안건 내 리스트마다 순서 변경 기능 바인딩
+            document.querySelectorAll('.lines-container').forEach(container => {
+                const agendaKey = container.getAttribute('data-agenda');
+                bindLineDragEvents(container, agendaKey);
+            });
         }
 
         function addLine(a) { state.contents[a].push(""); renderWriteZone(); save(); }
         function delLine(a, i) { if(state.contents[a].length > 1) { state.contents[a].splice(i, 1); renderWriteZone(); save(); } }
         function updateLine(a, i, val) { state.contents[a][i] = val; save(); }
+
+        // [신규] 태그(참석자, 안건) 드래그 이벤트 동기화 제어 함수
+        function bindDragEvents(container, stateKey, callback) {
+            let draggedIdx = null;
+            
+            container.addEventListener('dragstart', (e) => {
+                const target = e.target.closest('.tag-item');
+                if(!target) return;
+                draggedIdx = parseInt(target.getAttribute('data-index'));
+                target.classList.add('dragging');
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.tag-item');
+                if (!target || target.classList.contains('dragging')) return;
+                
+                const bounding = target.getBoundingClientRect();
+                const offset = e.clientX - bounding.left;
+                if (offset > bounding.width / 2) {
+                    target.after(document.querySelector('.tag-item.dragging'));
+                } else {
+                    target.before(document.querySelector('.tag-item.dragging'));
+                }
+            });
+
+            container.addEventListener('dragend', (e) => {
+                const target = e.target.closest('.tag-item');
+                if(!target) return;
+                target.classList.remove('dragging');
+                
+                // DOM 실제 배치 기준으로 배열 데이터 갱신 구조화
+                const currentItems = Array.from(container.querySelectorAll('.tag-item'));
+                const newOrder = currentItems.map(item => state[stateKey][parseInt(item.getAttribute('data-index'))]);
+                state[stateKey] = newOrder;
+                save();
+                callback();
+            });
+        }
+
+        // [신규] 세 번째 페이지 텍스트 영역 전용 드래그 이벤트 제어 함수
+        function bindLineDragEvents(container, agendaKey) {
+            container.addEventListener('dragstart', (e) => {
+                const target = e.target.closest('.line-input-group');
+                if(!target) return;
+                target.classList.add('dragging');
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.line-input-group');
+                if (!target || target.classList.contains('dragging')) return;
+                
+                const bounding = target.getBoundingClientRect();
+                const offset = e.clientY - bounding.top;
+                if (offset > bounding.height / 2) {
+                    target.after(document.querySelector('.line-input-group.dragging'));
+                } else {
+                    target.before(document.querySelector('.line-input-group.dragging'));
+                }
+            });
+
+            container.addEventListener('dragend', (e) => {
+                const target = e.target.closest('.line-input-group');
+                if(!target) return;
+                target.classList.remove('dragging');
+                
+                // 유저가 임의 수정한 텍스트 데이터를 DOM 배치 기준으로 안전하게 가로채 동기화
+                const currentRows = Array.from(container.querySelectorAll('.line-input-group'));
+                const updatedLines = currentRows.map(row => row.querySelector('textarea').value);
+                
+                state.contents[agendaKey] = updatedLines;
+                save();
+                renderWriteZone(); // 순서 갱신 후 텍스트뷰 데이터 상태 보존 리렌더링
+            });
+        }
 
         function getRawReport() {
             let res = `📝 [회의록] ${state.title || '정기 미팅'}\n`;
