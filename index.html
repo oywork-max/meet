@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OLIVE Meeting Room</title>
+    <title>올리브 미팅록 (PWA)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -53,7 +53,6 @@
         .step-bar { flex: 1; height: 5px; background: var(--border-color); border-radius: 4px; }
         .step-bar.active { background: var(--color-olive); }
 
-        /* [교정] 카드가 유연하게 줄어들도록 내부 요소 유연화 */
         .card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
         h2 { font-size: 1rem; margin-bottom: 10px; border-left: 4px solid var(--color-olive); padding-left: 6px; }
 
@@ -73,10 +72,9 @@
             resize: none;
         }
         
-        /* [수정] 아이폰 및 일부 안드로이드에서 datetime 인풋이 좌우를 뚫고 나가는 버그 완전 강제 교정 */
         input[type="datetime-local"] {
             display: block;
-            min-width: 0 !important; /* 기본 최소너비 제한 해제 */
+            min-width: 0 !important;
             flex: 1;
             box-sizing: border-box !important;
             -webkit-appearance: none;
@@ -90,9 +88,11 @@
         .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
         .btn-small { width: auto; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; flex-shrink: 0; }
 
-        .list-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-        .tag-item { background: var(--input-bg); padding: 4px 10px; border-radius: 16px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); }
-        .tag-item i { color: var(--color-coral); cursor: pointer; }
+        .list-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 20px; }
+        
+        .tag-item { background: var(--input-bg); padding: 4px 10px; border-radius: 16px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); cursor: grab; user-select: none; transition: opacity 0.2s; }
+        .tag-item:active { cursor: grabbing; }
+        .tag-item.dragging { opacity: 0.4; background: var(--border-color); }
 
         .select-item-label { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 12px; padding: 14px; background: var(--input-bg); border-radius: 10px; margin-bottom: 8px; cursor: pointer; width: 100%; }
         .select-item-label input[type="checkbox"] { width: 20px !important; height: 20px !important; flex-shrink: 0; accent-color: var(--color-olive); }
@@ -101,7 +101,10 @@
         .agenda-write-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--bg-primary); }
         .agenda-write-card h3 { font-size: 0.95rem; color: var(--color-olive); margin-bottom: 8px; }
         
-        .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
+        .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; background: var(--bg-card); padding: 4px; border-radius: 8px; border: 1px dashed transparent; }
+        .line-input-group.dragging { opacity: 0.4; border-color: var(--color-olive); }
+        .drag-handle { color: var(--text-secondary); padding: 10px 4px; cursor: grab; font-size: 0.9rem; display: flex; align-items: center; }
+        .drag-handle:active { cursor: grabbing; }
         .line-input-group textarea { flex: 1; min-height: 48px; height: auto; padding: 6px 8px; line-height: 1.4; font-size: 0.9rem; }
         .btn-del-line { background: none; border: none; color: var(--text-secondary); padding: 10px 4px; cursor: pointer; }
 
@@ -117,7 +120,7 @@
 <body>
 
     <header>
-        <h1>OLIVE <span>Meeting Room</span></h1>
+        <h1>올리브 <span>미팅록</span></h1>
         <button class="btn-outline btn-small" onclick="toggleTheme()">테마</button>
     </header>
 
@@ -142,7 +145,7 @@
         </div>
 
         <div class="card">
-            <h2>참석자 등록</h2>
+            <h2>참석자 등록 (드래그 순서 변경 가능)</h2>
             <div style="display:flex; gap:6px; width:100%;">
                 <input type="text" id="member-input" placeholder="이름 입력 후 엔터" onkeydown="if(event.keyCode==13) addMember()">
                 <button class="btn btn-primary btn-small" onclick="addMember()">등록</button>
@@ -151,7 +154,7 @@
         </div>
 
         <div class="card">
-            <h2>회의 안건 관리</h2>
+            <h2>회의 안건 관리 (드래그 순서 변경 가능)</h2>
             <div style="display:flex; gap:6px; width:100%;">
                 <input type="text" id="agenda-input" placeholder="안건 입력 후 엔터" onkeydown="if(event.keyCode==13) addAgenda()">
                 <button class="btn btn-primary btn-small" onclick="addAgenda()">등록</button>
@@ -197,16 +200,17 @@
                 <div class="result-view" id="result-text"></div>
             </div>
             
-            <button class="btn btn-accent mt-12" style="margin-bottom:8px;" onclick="shareToSlack()">
-                <i class="fa-brands fa-slack"></i> Slack으로 회의록 전송
-            </button>
-            
-            <div class="grid-2">
+            <div class="grid-2 mt-12">
+                <button class="btn btn-accent" onclick="saveToGallery()"><i class="fa-solid fa-images"></i> 사진첩에 저장</button>
+                <button class="btn btn-primary" onclick="downloadAsPNG()"><i class="fa-solid fa-file-image"></i> PNG로 저장</button>
+            </div>
+
+            <div class="grid-2 mt-10">
                 <button class="btn btn-outline" onclick="copyText()">텍스트 복사</button>
-                <button class="btn btn-outline" onclick="downloadAsImage()"><i class="fa-solid fa-image"></i> 이미지로 저장</button>
+                <button class="btn btn-outline" onclick="shareToSlack()"><i class="fa-brands fa-slack"></i> Slack 공유</button>
             </div>
             
-            <div class="grid-2 mt-10">
+            <div class="grid-2 mt-12" style="border-top: 1px dashed var(--border-color); padding-top: 10px;">
                 <button class="btn btn-outline" onclick="switchStep(3)">◀ 내용 수정하기</button>
                 <button class="btn btn-outline" style="color:red; border-color: #ffcccc;" onclick="location.reload()">새 회의 시작</button>
             </div>
@@ -217,13 +221,13 @@
         let state = {
             title: "", date: "", 
             members: [], 
-            agendas: ["교육내용", "전사전략"],
+            agendas: ["발주 변경", "신상품 교육", "재고 운영"],
             selected: [],
             contents: {}
         };
 
         window.onload = () => {
-            const saved = localStorage.getItem('olive_pwa_data_v3');
+            const saved = localStorage.getItem('olive_pwa_data_v4');
             if(saved) state = JSON.parse(saved);
             renderSetup();
             
@@ -251,12 +255,12 @@
         function save() { 
             state.title = document.getElementById('meet-title').value;
             state.date = document.getElementById('meet-date').value;
-            localStorage.setItem('olive_pwa_data_v3', JSON.stringify(state)); 
+            localStorage.setItem('olive_pwa_data_v4', JSON.stringify(state)); 
         }
 
         function clearAllCache() {
             if(confirm("기본 안건 세팅을 포함하여 등록된 참석자, 저장 기록 등 모든 데이터가 공장 초기화됩니다. 진행할까요?")) {
-                localStorage.removeItem('olive_pwa_data_v3');
+                localStorage.removeItem('olive_pwa_data_v4');
                 location.reload();
             }
         }
@@ -275,10 +279,22 @@
 
         function renderSetup() {
             const mList = document.getElementById('member-list');
-            mList.innerHTML = state.members.map((m, i) => `<div class="tag-item">${m} <i class="fa-solid fa-xmark" onclick="delMember(${i})"></i></div>`).join('');
+            mList.innerHTML = state.members.map((m, i) => `
+                <div class="tag-item" draggable="true" data-index="${i}">
+                    <i class="fa-solid fa-bars" style="color:#bbb; font-size:0.75rem;"></i> ${m} 
+                    <i class="fa-solid fa-xmark" onclick="delMember(${i})"></i>
+                </div>
+            `).join('');
+            bindDragEvents(mList, 'members', renderSetup);
             
             const aList = document.getElementById('agenda-list');
-            aList.innerHTML = state.agendas.map((a, i) => `<div class="tag-item">${a} <i class="fa-solid fa-xmark" onclick="delAgenda(${i})"></i></div>`).join('');
+            aList.innerHTML = state.agendas.map((a, i) => `
+                <div class="tag-item" draggable="true" data-index="${i}">
+                    <i class="fa-solid fa-bars" style="color:#bbb; font-size:0.75rem;"></i> ${a} 
+                    <i class="fa-solid fa-xmark" onclick="delAgenda(${i})"></i>
+                </div>
+            `).join('');
+            bindDragEvents(aList, 'agendas', renderSetup);
             
             document.getElementById('meet-title').value = state.title || "";
         }
@@ -324,9 +340,10 @@
             zone.innerHTML = state.selected.map(a => `
                 <div class="agenda-write-card">
                     <h3>📌 ${a}</h3>
-                    <div id="lines-${a}">
+                    <div id="lines-${a}" class="lines-container" data-agenda="${a}">
                         ${state.contents[a].map((text, i) => `
-                            <div class="line-input-group">
+                            <div class="line-input-group" draggable="true" data-index="${i}">
+                                <div class="drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
                                 <textarea placeholder="내용을 입력하세요" oninput="updateLine('${a}', ${i}, this.value)">${text}</textarea>
                                 <button class="btn-del-line" onclick="delLine('${a}', ${i})"><i class="fa-solid fa-minus"></i></button>
                             </div>
@@ -335,18 +352,78 @@
                     <button class="btn btn-outline btn-small" onclick="addLine('${a}')" style="width:100%; margin-top:4px;">+ 내용 행 추가</button>
                 </div>
             `).join('');
+
+            document.querySelectorAll('.lines-container').forEach(container => {
+                const agendaKey = container.getAttribute('data-agenda');
+                bindLineDragEvents(container, agendaKey);
+            });
         }
 
         function addLine(a) { state.contents[a].push(""); renderWriteZone(); save(); }
         function delLine(a, i) { if(state.contents[a].length > 1) { state.contents[a].splice(i, 1); renderWriteZone(); save(); } }
         function updateLine(a, i, val) { state.contents[a][i] = val; save(); }
 
+        function bindDragEvents(container, stateKey, callback) {
+            let draggedIdx = null;
+            container.addEventListener('dragstart', (e) => {
+                const target = e.target.closest('.tag-item');
+                if(!target) return;
+                draggedIdx = parseInt(target.getAttribute('data-index'));
+                target.classList.add('dragging');
+            });
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.tag-item');
+                if (!target || target.classList.contains('dragging')) return;
+                const bounding = target.getBoundingClientRect();
+                const offset = e.clientX - bounding.left;
+                if (offset > bounding.width / 2) { target.after(document.querySelector('.tag-item.dragging')); } 
+                else { target.before(document.querySelector('.tag-item.dragging')); }
+            });
+            container.addEventListener('dragend', (e) => {
+                const target = e.target.closest('.tag-item');
+                if(!target) return;
+                target.classList.remove('dragging');
+                const currentItems = Array.from(container.querySelectorAll('.tag-item'));
+                const newOrder = currentItems.map(item => state[stateKey][parseInt(item.getAttribute('data-index'))]);
+                state[stateKey] = newOrder;
+                save();
+                callback();
+            });
+        }
+
+        function bindLineDragEvents(container, agendaKey) {
+            container.addEventListener('dragstart', (e) => {
+                const target = e.target.closest('.line-input-group');
+                if(!target) return;
+                target.classList.add('dragging');
+            });
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.line-input-group');
+                if (!target || target.classList.contains('dragging')) return;
+                const bounding = target.getBoundingClientRect();
+                const offset = e.clientY - bounding.top;
+                if (offset > bounding.height / 2) { target.after(document.querySelector('.line-input-group.dragging')); } 
+                else { target.before(document.querySelector('.line-input-group.dragging')); }
+            });
+            container.addEventListener('dragend', (e) => {
+                const target = e.target.closest('.line-input-group');
+                if(!target) return;
+                target.classList.remove('dragging');
+                const currentRows = Array.from(container.querySelectorAll('.line-input-group'));
+                const updatedLines = currentRows.map(row => row.querySelector('textarea').value);
+                state.contents[agendaKey] = updatedLines;
+                save();
+                renderWriteZone();
+            });
+        }
+
         function getRawReport() {
             let res = `📝 [회의록] ${state.title || '정기 미팅'}\n`;
             res += `일시: ${document.getElementById('meet-date').value.replace('T',' ')}\n`;
             res += `참석자: ${state.members.length > 0 ? state.members.join(', ') : '-'}\n`;
             res += `--------------------------\n`;
-            
             state.selected.forEach(a => {
                 res += `\n📌 ${a}\n`;
                 if(state.contents[a]) {
@@ -367,26 +444,52 @@
             switchStep(4);
         }
 
+        function copyText() { navigator.clipboard.writeText(getRawReport()); alert("클립보드에 복사되었습니다."); }
+
         async function shareToSlack() {
             const reportText = getRawReport();
             if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: state.title || '회의록 전송',
-                        text: reportText
-                    });
-                } catch (err) {
-                    console.log('공유 취소 또는 에러:', err);
-                }
+                try { await navigator.share({ title: state.title || '회의록 전송', text: reportText }); } 
+                catch (err) { console.log('공유 취소:', err); }
             } else {
                 navigator.clipboard.writeText(reportText);
-                alert("현재 브라우저 환경이 시스템 공유 기능을 지원하지 않아 회의록을 클립보드에 바로 복사해드렸습니다! Slack 창에 붙여넣기(Ctrl+V) 해주세요.");
+                alert("시스템 공유 기능이 지원되지 않아 클립보드에 복사했습니다. Slack 창에 붙여넣기 해주세요.");
             }
         }
 
-        function copyText() { navigator.clipboard.writeText(getRawReport()); alert("클립보드에 복사되었습니다."); }
-        
-        function downloadAsImage() {
+        // [분리 기능 1] 모바일용 사진첩 연동 (Web Share API)
+        function saveToGallery() {
+            const target = document.getElementById('capture-area');
+            html2canvas(target, {
+                scale: 2,
+                backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e1e1b' : '#ffffff',
+                useCORS: true
+            }).then(canvas => {
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], `회의록_${state.title || '미팅'}.png`, { type: 'image/png' });
+                    
+                    // 브라우저가 파일 공유를 지원하는지 검증
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: '회의록 이미지 저장',
+                                text: '하단의 [이미지 저장]을 누르면 사진첩(갤러리)으로 들어갑니다.'
+                            });
+                        } catch (err) {
+                            console.log('공유/저장 취소됨:', err);
+                        }
+                    } else {
+                        // 미지원 기기는 다운로드 방식으로 우회 작동
+                        alert("현재 브라우저는 다이렉트 사진첩 저장을 지원하지 않아 일반 PNG 파일 저장 방식으로 전환합니다.");
+                        downloadAsPNG();
+                    }
+                }, 'image/png');
+            });
+        }
+
+        // [분리 기능 2] 일반 PNG 파일 내보내기 
+        function downloadAsPNG() {
             const target = document.getElementById('capture-area');
             html2canvas(target, {
                 scale: 2, 
@@ -400,7 +503,7 @@
                 link.click();
                 document.body.removeChild(link);
             }).catch(err => {
-                alert('이미지 생성에 실패했습니다. 다시 시도해 주세요.');
+                alert('이미지 생성 실패. 다시 시도해 주세요.');
                 console.error(err);
             });
         }
