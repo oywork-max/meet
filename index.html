@@ -54,7 +54,9 @@
         .step-bar.active { background: var(--color-olive); }
 
         .card { background: var(--bg-card); border-radius: 14px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; }
-        h2 { font-size: 1rem; margin-bottom: 10px; border-left: 4px solid var(--color-olive); padding-left: 6px; }
+        .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-left: 4px solid var(--color-olive); padding-left: 6px; }
+        h2 { font-size: 1rem; border-left: 4px solid var(--color-olive); padding-left: 6px; margin-bottom: 10px; }
+        .card-header-flex h2 { border-left: none; padding-left: 0; margin-bottom: 0; }
 
         .form-group { margin-bottom: 8px; width: 100%; display: flex; flex-direction: column; }
         .form-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
@@ -99,9 +101,18 @@
         .agenda-write-card { border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--bg-primary); }
         .agenda-write-card h3 { font-size: 0.95rem; color: var(--color-olive); margin-bottom: 8px; }
         
-        .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; background: var(--bg-card); padding: 4px; border-radius: 8px; }
+        /* [기능 변경] 트리 구조 스타일링 */
+        .line-input-group { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; background: var(--bg-card); padding: 4px; border-radius: 8px; transition: all 0.2s ease; }
+        .line-input-group.indent { padding-left: 24px; background: transparent; }
         .line-input-group textarea { flex: 1; min-height: 48px; height: auto; padding: 6px 8px; line-height: 1.4; font-size: 0.9rem; }
+        .line-input-group.is-parent textarea { font-weight: 800 !important; color: var(--color-olive-dark); }
+        
+        .btn-tree-toggle { background: none; border: none; color: var(--color-olive); padding: 10px 6px; cursor: pointer; font-size: 1rem; width: 28px; display: flex; justify-content: center; }
         .btn-del-line { background: none; border: none; color: var(--text-secondary); padding: 10px 4px; cursor: pointer; }
+
+        /* 전체 선택 바 스타일 */
+        .all-select-wrap { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-secondary); }
+        .all-select-wrap input { width: 16px !important; height: 16px !important; accent-color: var(--color-olive); cursor: pointer; }
 
         .capture-wrapper { background: var(--bg-card); padding: 4px; border-radius: 10px; }
         .result-view { white-space: pre-wrap; background: var(--input-bg); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); line-height: 1.6; font-size: 0.9rem; color: #222222; }
@@ -170,7 +181,14 @@
     <!-- [STEP 2] 안건 선택 페이지 -->
     <div id="step-select" class="hidden">
         <div class="card">
-            <h2>안건 선택</h2>
+            <div class="card-header-flex">
+                <h2>안건 선택</h2>
+                <!-- 전체 선택 체크박스 추가 -->
+                <label class="all-select-wrap">
+                    <input type="checkbox" id="all-agenda-select" onchange="toggleAllAgendas(this.checked)">
+                    <span>전체 선택</span>
+                </label>
+            </div>
             <div id="select-zone"></div>
             <div class="grid-2 mt-10">
                 <button class="btn btn-outline" onclick="switchStep(1)">이전</button>
@@ -199,18 +217,15 @@
                 <div class="result-view" id="result-text"></div>
             </div>
             
-            <!-- [구조 수정] 슬랙 공유 가로 단독 배치 -->
             <div class="mt-12">
                 <button class="btn btn-accent" onclick="shareToSlack()" style="padding: 14px; font-size: 1.05rem;"><i class="fa-brands fa-slack"></i> Slack 공유</button>
             </div>
 
-            <!-- [구조 수정] 텍스트 복사 및 사진(PNG) 저장 5:5 그리드 배치 -->
             <div class="grid-2 mt-10">
                 <button class="btn btn-outline" onclick="copyText()"><i class="fa-regular fa-copy"></i> 텍스트 복사</button>
                 <button class="btn btn-primary" onclick="downloadAsPNG()"><i class="fa-solid fa-file-image"></i> 사진(PNG)로 저장</button>
             </div>
             
-            <!-- 하단 이동 메뉴 인터페이스 -->
             <div class="grid-2 mt-12" style="border-top: 1px dashed var(--border-color); padding-top: 12px;">
                 <button class="btn btn-outline" onclick="switchStep(3)"><i class="fa-solid fa-chevron-left"></i> 이전</button>
                 <button class="btn btn-outline" style="color:red; border-color: #ffcccc;" onclick="location.reload()">새 회의 시작</button>
@@ -222,13 +237,14 @@
         let state = {
             title: "", date: "", 
             members: [], 
-            agendas: ["교육내용", "전사전략", "추진방향"],
+            agendas: ["발주 변경", "신상품 교육", "재고 운영"],
             selected: [],
+            // 내부 데이터 구조 변경: 각 줄마다 { text: "", indent: false } 객체 형태로 저장
             contents: {}
         };
 
         window.onload = () => {
-            const saved = localStorage.getItem('olive_pwa_data_v4');
+            const saved = localStorage.getItem('olive_pwa_data_v4_tree');
             if(saved) state = JSON.parse(saved);
             renderSetup();
             
@@ -256,12 +272,12 @@
         function save() { 
             state.title = document.getElementById('meet-title').value;
             state.date = document.getElementById('meet-date').value;
-            localStorage.setItem('olive_pwa_data_v4', JSON.stringify(state)); 
+            localStorage.setItem('olive_pwa_data_v4_tree', JSON.stringify(state)); 
         }
 
         function clearAllCache() {
-            if(confirm("기본 안건 세팅을 포함하여 등록된 참석자, 저장 기록 등 모든 데이터가 초기화됩니다. 진행할까요?")) {
-                localStorage.removeItem('olive_pwa_data_v4');
+            if(confirm("모든 캐시 데이터가 공장 초기화됩니다. 진행할까요?")) {
+                localStorage.removeItem('olive_pwa_data_v4_tree');
                 location.reload();
             }
         }
@@ -316,10 +332,36 @@
             const zone = document.getElementById('select-zone');
             zone.innerHTML = state.agendas.map(a => `
                 <label class="select-item-label">
-                    <input type="checkbox" value="${a}" ${state.selected.includes(a)?'checked':''}>
+                    <input type="checkbox" value="${a}" ${state.selected.includes(a)?'checked':''} onchange="updateSingleSelect()">
                     <span>${a}</span>
                 </label>
             `).join('');
+            
+            // 초기 로딩 시 전체 선택 동기화 체크
+            const totalBoxes = state.agendas.length;
+            const checkedBoxes = state.selected.filter(x => state.agendas.includes(x)).length;
+            document.getElementById('all-agenda-select').checked = (totalBoxes === checkedBoxes && totalBoxes > 0);
+        }
+
+        // 전체 선택 스위칭 토글
+        function toggleAllAgendas(isChecked) {
+            const boxes = document.querySelectorAll('#select-zone input[type="checkbox"]');
+            boxes.forEach(box => box.checked = isChecked);
+            if(isChecked) {
+                state.selected = [...state.agendas];
+            } else {
+                state.selected = [];
+            }
+            save();
+        }
+
+        // 각각 체크 시 전체 선택 상태 동기화
+        function updateSingleSelect() {
+            const checked = document.querySelectorAll('#select-zone input:checked');
+            state.selected = Array.from(checked).map(c => c.value);
+            const allChecked = state.selected.length === state.agendas.length;
+            document.getElementById('all-agenda-select').checked = allChecked;
+            save();
         }
 
         function initWriteStep() {
@@ -327,32 +369,54 @@
             state.selected = Array.from(checked).map(c => c.value);
             if(state.selected.length === 0) return alert("진행할 안건을 최소 하나 선택해주세요.");
             
-            state.selected.forEach(a => { if(!state.contents[a]) state.contents[a] = [""]; });
+            state.selected.forEach(a => { 
+                if(!state.contents[a]) {
+                    state.contents[a] = [{ text: "", indent: false }]; 
+                }
+            });
             renderWriteZone();
             switchStep(3);
         }
 
         function renderWriteZone() {
             const zone = document.getElementById('write-zone');
-            zone.innerHTML = state.selected.map(a => `
-                <div class="agenda-write-card">
-                    <h3>📌 ${a}</h3>
-                    <div id="lines-${a}">
-                        ${state.contents[a].map((text, i) => `
-                            <div class="line-input-group">
-                                <textarea placeholder="내용을 입력하세요" oninput="updateLine('${a}', ${i}, this.value)">${text}</textarea>
-                                <button class="btn-del-line" onclick="delLine('${a}', ${i})"><i class="fa-solid fa-minus"></i></button>
-                            </div>
-                        `).join('')}
+            zone.innerHTML = state.selected.map(a => {
+                const arr = state.contents[a];
+                return `
+                    <div class="agenda-write-card">
+                        <h3>📌 ${a}</h3>
+                        <div id="lines-${a}">
+                            ${arr.map((item, i) => {
+                                // 트리 내부 규칙 계산: 내 다음 줄이 들여쓰기 상태(indent: true)이면 나는 상위부모가 되므로 Bold 클래스 추가
+                                const isParent = (i < arr.length - 1 && arr[i+1].indent && !item.indent);
+                                return `
+                                    <div class="line-input-group ${item.indent ? 'indent' : ''} ${isParent ? 'is-parent' : ''}">
+                                        <!-- 스위칭 화살표 단락 버튼 -->
+                                        <button class="btn-tree-toggle" onclick="toggleTreeIndent('${a}', ${i})">
+                                            <i class="fa-solid ${item.indent ? 'fa-chevron-left' : 'fa-chevron-right'}"></i>
+                                        </button>
+                                        <textarea placeholder="${item.indent ? '상세 내용을 입력하세요' : '주요 아젠다를 입력하세요'}" oninput="updateLine('${a}', ${i}, this.value)">${item.text}</textarea>
+                                        <button class="btn-del-line" onclick="delLine('${a}', ${i})"><i class="fa-solid fa-minus"></i></button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <button class="btn btn-outline btn-small" onclick="addLine('${a}')" style="width:100%; margin-top:4px;">+ 내용 행 추가</button>
                     </div>
-                    <button class="btn btn-outline btn-small" onclick="addLine('${a}')" style="width:100%; margin-top:4px;">+ 내용 행 추가</button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        function addLine(a) { state.contents[a].push(""); renderWriteZone(); save(); }
+        // 화살표 스위칭 및 들여쓰기 토글 처리
+        function toggleTreeIndent(a, i) {
+            state.contents[a][i].indent = !state.contents[a][i].indent;
+            renderWriteZone();
+            save();
+        }
+
+        function addLine(a) { state.contents[a].push({ text: "", indent: false }); renderWriteZone(); save(); }
         function delLine(a, i) { if(state.contents[a].length > 1) { state.contents[a].splice(i, 1); renderWriteZone(); save(); } }
-        function updateLine(a, i, val) { state.contents[a][i] = val; save(); }
+        function updateLine(a, i, val) { state.contents[a][i].text = val; save(); }
 
         function getRawReport() {
             let res = `📝 [회의록] ${state.title || '정기 미팅'}\n`;
@@ -362,10 +426,17 @@
             state.selected.forEach(a => {
                 res += `\n📌 ${a}\n`;
                 if(state.contents[a]) {
-                    state.contents[a].forEach(line => { 
-                        if(line.trim()) {
-                            const formattedLine = line.split('\n').map((subLine, idx) => idx === 0 ? ` - ${subLine}` : `   ${subLine}`).join('\n');
-                            res += `${formattedLine}\n`; 
+                    state.contents[a].forEach(item => { 
+                        if(item.text.trim()) {
+                            if(item.indent) {
+                                // 하위 트리인 경우 탭 들여쓰기와 빈 원형 불릿을 배치
+                                const subLines = item.text.split('\n').map((subLine, idx) => idx === 0 ? `   ◦ ${subLine}` : `     ${subLine}`).join('\n');
+                                res += `${subLines}\n`;
+                            } else {
+                                // 상위 기본 행인 경우 대시 하이픈 불릿을 배치
+                                const formattedLine = item.text.split('\n').map((subLine, idx) => idx === 0 ? ` - ${subLine}` : `   ${subLine}`).join('\n');
+                                res += `${formattedLine}\n`; 
+                            }
                         }
                     });
                 }
@@ -400,7 +471,7 @@
                 useCORS: true
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `회의록_${state.title || '이미지'}.png`;
+                link.download = `회의록_${state.title || '미팅데이터'}.png`;
                 link.href = canvas.toDataURL('image/png');
                 document.body.appendChild(link);
                 link.click();
