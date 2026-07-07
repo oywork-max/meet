@@ -1,7 +1,7 @@
 {
-  "name": "올리브 미팅록 PWA",
-  "short_name": "올리브 미팅",
-  "description": "업무 최적화용 원스톱 PWA 회의록 시스템",
+  "name": "올리브 미팅룸",
+  "short_name": "회의노트",
+  "description": "회의 공유, 회의록 작성을 위한 Tool",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f9f9f7",
